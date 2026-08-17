@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>ExamBuddy AI</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<div class="app-container">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                🎓
+            </div>
+
+            <div>
+
+                <h2>ExamBuddy</h2>
+
+                <span>AI Study Assistant</span>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="new-chat-btn"
+            onclick="newChat()"
+        >
+
+            + New Chat
+
+        </button>
+
+
+        <div class="sidebar-section">
+
+            <p class="section-title">
+                STUDY TOOLS
+            </p>
+
+
+            <button
+                class="tool-btn"
+                onclick="usePrompt('Give me 5 important MCQs on ')"
+            >
+
+                📝
+
+                <span>MCQ Quiz</span>
+
+            </button>
+
+
+            <button
+                class="tool-btn"
+                onclick="usePrompt('Give me quick revision notes for ')"
+            >
+
+                📚
+
+                <span>Revision Notes</span>
+
+            </button>
+
+
+            <button
+                class="tool-btn"
+                onclick="usePrompt('Give me a 2 mark answer for ')"
+            >
+
+                ⚡
+
+                <span>2 Mark Answer</span>
+
+            </button>
+
+
+            <button
+                class="tool-btn"
+                onclick="usePrompt('Give me a 5 mark answer for ')"
+            >
+
+                📖
+
+                <span>5 Mark Answer</span>
+
+            </button>
+
+
+            <button
+                class="tool-btn"
+                onclick="usePrompt('Give me a 13 mark answer for ')"
+            >
+
+                🎯
+
+                <span>13 Mark Answer</span>
+
+            </button>
+
+
+            <button
+                class="tool-btn"
+                onclick="usePrompt('Create a question paper for ')"
+            >
+
+                📄
+
+                <span>Question Paper</span>
+
+            </button>
+
+
+        </div>
+
+
+        <div class="sidebar-bottom">
+
+
+            <button
+                class="clear-btn"
+                onclick="clearHistory()"
+            >
+
+                🗑 Clear Chat
+
+            </button>
+
+
+            <button
+                class="logout-btn"
+                onclick="logoutUser()"
+            >
+
+                ↪ Logout
+
+            </button>
+
+
+        </div>
+
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="main-content">
+
+
+        <!-- =================================================
+             TOPBAR
+        ================================================== -->
+
+        <header class="topbar">
+
+
+            <div>
+
+                <h1>
+                    ExamBuddy AI
+                </h1>
+
+                <p>
+                    Smart exam preparation made simple
+                </p>
+
+            </div>
+
+
+            <div class="status">
+
+                <span class="status-dot"></span>
+
+                AI Online
+
+            </div>
+
+
+        </header>
+
+
+
+        <!-- =================================================
+             CHAT AREA
+        ================================================== -->
+
+        <section
+            id="chat-container"
+            class="chat-container"
+        >
+
+
+            <!-- =================================================
+                 WELCOME SCREEN
+            ================================================== -->
+
+            <div
+                id="welcome-screen"
+                class="welcome-screen"
+            >
+
+
+                <div class="welcome-icon">
+                    🎓
+                </div>
+
+
+                <h2>
+                    Welcome to ExamBuddy AI
+                </h2>
+
+
+                <p>
+                    Ask a question and get an answer
+                    designed for your exam preparation.
+                </p>
+
+
+                <div class="suggestions">
+
+
+                    <button
+                        onclick="sendSuggestion('Define Database')"
+                    >
+
+                        💡
+
+                        <span>
+                            Try a definition
+                        </span>
+
+                    </button>
+
+
+                    <button
+                        onclick="sendSuggestion('Give me a 2 mark answer for Operating System')"
+                    >
+
+                        ⚡
+
+                        <span>
+                            2 Mark Answer
+                        </span>
+
+                    </button>
+
+
+                    <button
+                        onclick="sendSuggestion('Give me 5 MCQs on Python')"
+                    >
+
+                        📝
+
+                        <span>
+                            Create MCQs
+                        </span>
+
+                    </button>
+
+
+                    <button
+                        onclick="sendSuggestion('Give me revision notes for Computer Networks')"
+                    >
+
+                        📚
+
+                        <span>
+                            Revision Notes
+                        </span>
+
+                    </button>
+
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             INPUT AREA
+        ================================================== -->
+
+        <div class="input-area">
+
+
+            <div class="input-wrapper">
+
+
+                <!-- TEXT INPUT -->
+
+                <textarea
+                    id="message-input"
+                    rows="1"
+                    placeholder="Ask your exam question..."
+                    onkeydown="handleKeyDown(event)"
+                ></textarea>
+
+
+
+                <!-- =================================================
+                     VOICE BUTTON
+                ================================================== -->
+
+                <button
+                    type="button"
+                    id="voice-btn"
+                    class="voice-btn"
+                    onclick="startVoiceInput()"
+                    title="Speak your question"
+                >
+
+                    <span class="mic-icon">
+                        🎤
+                    </span>
+
+
+                    <!-- Animated voice waves -->
+
+                    <span class="voice-waves">
+
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+
+                    </span>
+
+                </button>
+
+
+
+                <!-- =================================================
+                     SEND BUTTON
+                ================================================== -->
+
+                <button
+                    type="button"
+                    id="send-btn"
+                    class="send-btn"
+                    onclick="sendMessage()"
+                    title="Send message"
+                >
+
+                    ➤
+
+                </button>
+
+
+            </div>
+
+
+
+            <!-- INPUT NOTE -->
+
+            <p class="input-note">
+
+                🎤 Voice Input • ExamBuddy AI • Academic Assistant
+
+            </p>
+
+
+
+            <!-- VOICE STATUS -->
+
+            <p
+                id="voice-status"
+                class="voice-status"
+            ></p>
+
+
+        </div>
+
+
+    </main>
+
+
+</div>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script
+    src="{{ url_for('static', filename='script.js') }}"
+></script>
+
+
+</body>
+
+</html>
