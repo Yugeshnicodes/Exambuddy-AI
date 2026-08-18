@@ -62,7 +62,8 @@ if not GROQ_API_KEY:
     print(
         "WARNING: GROQ_API_KEY is missing. "
         "Gemini will work, but Groq backup will not."
-    )
+ firebase_key_path = (
+   )
 
 groq_client = None
 
@@ -77,7 +78,6 @@ if GROQ_API_KEY:
 # FIREBASE CONFIGURATION
 # =========================================================
 
-firebase_key_path = (
     BASE_DIR
     / "firebase"
     / "serviceAccountKey.json"
