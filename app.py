@@ -38,7 +38,7 @@ GEMINI_MODEL = os.getenv(
 
 if not GEMINI_API_KEY:
     raise RuntimeError(
-        "GEMINI_API_KEY is missing in .env file."
+        "GEMINI_API_KEY is missing."
     )
 
 gemini_client = genai.Client(
@@ -57,20 +57,16 @@ GROQ_MODEL = os.getenv(
     "llama-3.3-70b-versatile"
 )
 
-if not GROQ_API_KEY:
-
-    print(
-        "WARNING: GROQ_API_KEY is missing. "
-        "Gemini will work, but Groq backup will not."
- firebase_key_path = (
-   )
-
 groq_client = None
 
 if GROQ_API_KEY:
-
     groq_client = Groq(
         api_key=GROQ_API_KEY
+    )
+else:
+    print(
+        "WARNING: GROQ_API_KEY is missing. "
+        "Gemini will work, but Groq backup will not."
     )
 
 
@@ -78,6 +74,7 @@ if GROQ_API_KEY:
 # FIREBASE CONFIGURATION
 # =========================================================
 
+firebase_key_path = (
     BASE_DIR
     / "firebase"
     / "serviceAccountKey.json"
@@ -103,17 +100,26 @@ if not firebase_admin._apps:
 
         if firebase_config:
 
-            service_account_info = json.loads(
-                firebase_config
-            )
+            try:
 
-            credential = credentials.Certificate(
-                service_account_info
-            )
+                service_account_info = json.loads(
+                    firebase_config
+                )
 
-            firebase_admin.initialize_app(
-                credential
-            )
+                credential = credentials.Certificate(
+                    service_account_info
+                )
+
+                firebase_admin.initialize_app(
+                    credential
+                )
+
+            except Exception as firebase_config_error:
+
+                raise RuntimeError(
+                    "Invalid FIREBASE_SERVICE_ACCOUNT_JSON: "
+                    + str(firebase_config_error)
+                )
 
         else:
 
@@ -207,7 +213,7 @@ STUDY_KEYWORDS = [
     "timetable",
     "study plan",
 
-    # Common technical / academic subjects
+    # Technical / academic subjects
     "python",
     "java",
     "c programming",
@@ -219,12 +225,10 @@ STUDY_KEYWORDS = [
     "dbms",
     "sql",
     "operating system",
-    "os",
     "computer network",
     "networking",
     "machine learning",
     "artificial intelligence",
-    "ai",
     "data science",
     "data structures",
     "algorithm",
@@ -238,7 +242,16 @@ STUDY_KEYWORDS = [
     "distributed computing",
     "statistics",
     "mathematics",
-    "probability"
+    "probability",
+    "physics",
+    "chemistry",
+    "biology",
+    "economics",
+    "management",
+    "commerce",
+    "accounting",
+    "engineering",
+    "technology"
 ]
 
 
@@ -246,20 +259,13 @@ def is_study_exam_question(question):
 
     text = question.lower().strip()
 
-    # -----------------------------------------------------
-    # Direct keyword check
-    # -----------------------------------------------------
-
+    # Direct academic keyword check
     for keyword in STUDY_KEYWORDS:
 
         if keyword in text:
-
             return True
 
-    # -----------------------------------------------------
-    # Common academic question patterns
-    # -----------------------------------------------------
-
+    # Academic question patterns
     academic_patterns = [
 
         r"\bwhat is\b",
@@ -287,7 +293,6 @@ def is_study_exam_question(question):
     for pattern in academic_patterns:
 
         if re.search(pattern, text):
-
             return True
 
     return False
@@ -300,8 +305,6 @@ def is_study_exam_question(question):
 def detect_answer_type(question):
 
     text = question.lower().strip()
-
-    # Explicit marks
 
     if re.search(
         r"\b2\s*marks?\b|\b2\s*mark\b",
@@ -351,8 +354,6 @@ def detect_answer_type(question):
     ):
         return "50"
 
-    # Special requests
-
     if (
         "mcq" in text
         or "multiple choice" in text
@@ -370,8 +371,6 @@ def detect_answer_type(question):
 
     if "assignment" in text:
         return "assignment"
-
-    # Definition
 
     if (
         text.startswith("define ")
@@ -407,7 +406,12 @@ You MUST answer questions related to:
 - Definitions
 - 2 mark answers
 - 5 mark answers
-- 10/13/15/16 mark answers
+- 10 mark answers
+- 13 mark answers
+- 15 mark answers
+- 16 mark answers
+- 20 mark answers
+- 50 mark answers
 - Long answers
 - MCQs
 - Quizzes
@@ -434,28 +438,11 @@ For unrelated questions, respond ONLY with:
 
 Sorry, I can help only with study and exam-related questions. Please ask an academic or exam-related question.
 
-Examples of questions that MUST be rejected:
-
-- Tell me a joke.
-- What is today's weather?
-- Who is the best actor?
-- Tell me a movie story.
-- What is the latest sports news?
-- Give me a random story.
-- What should I eat?
-- Tell me about celebrities.
-- General chatting.
-- Entertainment questions.
-
-Do NOT answer unrelated questions even if the user asks
-for an explanation or detailed answer.
-
 IMPORTANT ANSWER RULES:
 
 1. Always understand the exact academic question.
 
 2. If the student asks a simple definition such as:
-
 Define database
 What is AI?
 Define operating system
@@ -464,42 +451,31 @@ Give only a short definition.
 Maximum 2 or 3 sentences.
 
 3. If the student does NOT mention marks:
-
 Give a short and useful academic answer.
 
-Do NOT automatically give a 5-mark or 10-mark answer.
-
 4. If the student specifically asks for 2 marks:
-
 Give a very short exam-ready answer.
 
 5. If the student specifically asks for 5 marks:
-
 Give a medium-length answer with important points.
 
 6. If the student specifically asks for 10, 13, 15, 16, 20
 or 50 marks:
-
 Give a detailed answer suitable for that mark level.
 
 7. If the student asks for an assignment:
-
 Give an assignment-style academic response.
 
 8. If the student asks for a question paper:
-
 Generate a proper academic question paper with sections and marks.
 
 9. If the student asks for MCQs:
-
 Give questions with four options and clearly show the correct answer.
 
 10. If the student asks for revision notes:
-
 Give concise bullet-point notes.
 
 11. If the student asks a programming question:
-
 Explain it simply and provide correct code when needed.
 
 12. Always stay relevant to the exact academic question.
@@ -510,30 +486,11 @@ Explain it simply and provide correct code when needed.
 
 15. Never repeat the student's question unnecessarily.
 
-16. Do not use unnecessary Markdown symbols.
+16. Never change the topic.
 
-Do not use:
+17. Never answer non-academic questions.
 
-**
-***
-###
->>
-_
----
-
-Use simple headings such as:
-
-Definition:
-Key Points:
-Example:
-Answer:
-Conclusion:
-
-17. Never change the topic.
-
-18. Never answer non-academic questions.
-
-19. Always behave like an exam preparation chatbot.
+18. Always behave like an exam preparation chatbot.
 """
 
 
@@ -544,7 +501,6 @@ Conclusion:
 def clean_ai_answer(ai_answer):
 
     if not ai_answer:
-
         return ""
 
     ai_answer = ai_answer.strip()
@@ -578,9 +534,7 @@ def clean_ai_answer(ai_answer):
 def get_gemini_answer(prompt):
 
     response = gemini_client.models.generate_content(
-
         model=GEMINI_MODEL,
-
         contents=prompt
     )
 
@@ -684,12 +638,10 @@ def chat():
                 "error": "Invalid request."
             }), 400
 
-
         user_message = data.get(
             "message",
             ""
         ).strip()
-
 
         if not user_message:
 
@@ -697,7 +649,6 @@ def chat():
                 "success": False,
                 "error": "Please enter a question."
             }), 400
-
 
         # =================================================
         # STUDY / EXAM FILTER
@@ -711,30 +662,23 @@ def chat():
                 "academic or exam-related question."
             )
 
-            # Save rejected question to Firebase
             try:
 
                 chat_data = {
 
-                    "question":
-                        user_message,
+                    "question": user_message,
 
-                    "answer":
-                        rejected_answer,
+                    "answer": rejected_answer,
 
-                    "answer_type":
-                        "outside_scope",
+                    "answer_type": "outside_scope",
 
-                    "model":
-                        "ExamBuddy Filter",
+                    "model": "ExamBuddy Filter",
 
-                    "timestamp":
-                        datetime.now(
-                            timezone.utc
-                        ),
+                    "timestamp": datetime.now(
+                        timezone.utc
+                    ),
 
-                    "type":
-                        "chat"
+                    "type": "chat"
                 }
 
                 db.collection(
@@ -752,17 +696,13 @@ def chat():
 
             return jsonify({
 
-                "success":
-                    True,
+                "success": True,
 
-                "answer":
-                    rejected_answer,
+                "answer": rejected_answer,
 
-                "model":
-                    "ExamBuddy Filter"
+                "model": "ExamBuddy Filter"
 
             })
-
 
         # =================================================
         # DETECT ANSWER TYPE
@@ -771,7 +711,6 @@ def chat():
         answer_type = detect_answer_type(
             user_message
         )
-
 
         # =================================================
         # CREATE PROMPT
@@ -807,15 +746,10 @@ follow that mark level.
 
 Do not add unnecessary sections.
 
-Do not use markdown symbols.
-
-Do not use ** or ### or >.
-
 Do not ask the student to send another question.
 
 Stay strictly within the academic topic asked by the student.
 """
-
 
         # =================================================
         # TRY GEMINI FIRST
@@ -839,21 +773,16 @@ Stay strictly within the academic topic asked by the student.
                 "Gemini response successful."
             )
 
-
         except Exception as gemini_error:
 
             print(
-                "Gemini failed:"
-            )
-
-            print(
+                "Gemini failed:",
                 gemini_error
             )
 
             print(
                 "Switching to Groq backup..."
             )
-
 
             # =================================================
             # TRY GROQ
@@ -871,14 +800,10 @@ Stay strictly within the academic topic asked by the student.
                     "Groq backup response successful."
                 )
 
-
             except Exception as groq_error:
 
                 print(
-                    "Groq backup also failed:"
-                )
-
-                print(
+                    "Groq backup also failed:",
                     groq_error
                 )
 
@@ -891,7 +816,6 @@ Stay strictly within the academic topic asked by the student.
 
                 }), 500
 
-
         # =================================================
         # FINAL CHECK
         # =================================================
@@ -900,14 +824,12 @@ Stay strictly within the academic topic asked by the student.
 
             return jsonify({
 
-                "success":
-                    False,
+                "success": False,
 
                 "error":
                     "Unable to generate an answer."
 
             }), 500
-
 
         # =================================================
         # SAVE TO FIREBASE
@@ -938,13 +860,11 @@ Stay strictly within the academic topic asked by the student.
                     "chat"
             }
 
-
             db.collection(
                 "chat_history"
             ).add(
                 chat_data
             )
-
 
         except Exception as firebase_error:
 
@@ -952,7 +872,6 @@ Stay strictly within the academic topic asked by the student.
                 "Firebase Save Error:",
                 firebase_error
             )
-
 
         # =================================================
         # RETURN ANSWER
@@ -970,7 +889,6 @@ Stay strictly within the academic topic asked by the student.
                 used_model
 
         })
-
 
     except Exception as error:
 
@@ -1008,11 +926,9 @@ def clear_history():
             ).stream()
         )
 
-
         for document in documents:
 
             document.reference.delete()
-
 
         return jsonify({
 
@@ -1023,7 +939,6 @@ def clear_history():
                 "Chat history cleared."
 
         })
-
 
     except Exception as error:
 
@@ -1056,13 +971,8 @@ if __name__ == "__main__":
         )
     )
 
-
     app.run(
-
         host="0.0.0.0",
-
         port=port,
-
-        debug=True
-
+        debug=False
     )
